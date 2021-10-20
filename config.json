@@ -1,10 +1,10 @@
 {
         "apikeys": {
-                "i0mf0rmer034": {
-                        "app_key": "APP_KEY",
-                        "app_secret": "APP_SECRET",
-                        "oauth_token": "OAUTH_TOKEN",
-                        "oauth_token_secret": "OAUTH_TOKEN_SECRET"
+                "evangstathop": {
+                        "app_key": "GD6DXukgk3Am3YzedtMY9cvy9",
+                        "app_secret": "gEQP2KTHX9H8FSdklry6EQAsTx137o9qGWuV2DN0o6AbhYolPb",
+                        "oauth_token": "1967154884-jZyCwroERP16cW0vcbHU2OYW1fgFap8PojKQTYf",
+                        "oauth_token_secret": "c1ZPxBR0HNIpK7fC3V5YtGzTeA271sf2FhFmRT2Db69dI"
                 }
         }
 }

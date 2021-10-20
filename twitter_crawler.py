@@ -349,13 +349,14 @@ class TwitterCrawler(twython.Twython):
         logger.info("[%s] total tweets: %d; since_id: [%d]"%(user_id, cnt, since_id))
         return current_since_id, False
 
-    def search_by_query(self, query, since_id = 0, geocode=None, lang=None, output_filename = None):
+    # ADDED search_name for finding it in mongoDB
+    def search_by_query(self, query, since_id = 0, geocode=None, search_name="no_search_name", lang=None, output_filename = None):
 
         if not query:
             raise Exception("search: query cannot be None")
 
         now=datetime.datetime.now()
-        #logger.info("query: %s; since_id: %d"%(query, since_id))
+        logger.info("query: %s; since_id: %d"%(query, since_id))
         place = None
         geo = None
 
@@ -364,21 +365,28 @@ class TwitterCrawler(twython.Twython):
 
             day_output_folder = os.path.abspath('%s/%s/%s'%(self.output_folder, now.strftime('%Y%m%d'), place))
         else:
-            day_output_folder = os.path.abspath('%s/%s'%(self.output_folder, now.strftime('%Y%m%d')))
+            day_output_folder = os.path.abspath('%s/%s'%(self.output_folder, now.strftime('%Y%m%d'))) #ALEX HERE names the output folders
 
         if not os.path.exists(day_output_folder):
             os.makedirs(day_output_folder)
 
-        filename = os.path.abspath('%s/%s'%(day_output_folder, util.md5(query.encode('utf-8'))))
+        filename = os.path.abspath('%s/%s'%(day_output_folder, util.md5(query.encode('utf-8')))) #ALEX HERE names the output files | we can send back this code as id
 
+        # logger.info("filename: %s; since_id: %d" % (filename, since_id))
         prev_max_id = -1
 
         current_max_id = 0
         cnt = 0
         current_since_id = since_id
+        no_new_tweets = False
 
         retry_cnt = MAX_RETRY_CNT
         #result_tweets = []
+
+        # Get the database ALEX
+        from mongo_connector import get_database
+        dbname = get_database()
+
         while current_max_id != prev_max_id and retry_cnt > 0:
             try:
                 if current_max_id > 0:
@@ -389,16 +397,51 @@ class TwitterCrawler(twython.Twython):
 
                 prev_max_id = current_max_id # if no new tweets are found, the prev_max_id will be the same as current_max_id
 
-                with open(filename, 'a+', newline='', encoding='utf-8') as f:
-                    for tweet in tweets['statuses']:
-                        f.write('%s\n'%json.dumps(tweet))
-                        if current_max_id == 0 or current_max_id > int(tweet['id']):
-                            current_max_id = int(tweet['id'])
-                        if current_since_id == 0 or current_since_id < int(tweet['id']):
-                            current_since_id = int(tweet['id'])
+                #Change file with connection to mongoDB
+                # Create a new collection
+                collection_name = dbname["tweeter"]
+                item_details = collection_name.find()
+
+                for tweet in tweets['statuses']:
+                    # INSERT in mongodb
+                    # logger.info("tweet id: %s"%(tweet))
+                    logger.info("tweet id: %s" % (tweet["id"]))
+                    tweet["search_name"] = search_name  # "custom_search_name"
+                    collection_name.insert_one(tweet)
+                    if current_max_id == 0 or current_max_id > int(tweet['id']):
+                        current_max_id = int(tweet['id'])
+                    if current_since_id == 0 or current_since_id < int(tweet['id']):
+                        current_since_id = int(tweet['id'])
+                    #break
+
+
+
+                from pandas import DataFrame
+                # convert the dictionary objects to dataframe
+                items_df = DataFrame(item_details)
+
+                # see the magic
+                # print(items_df)
+
+                # for item in item_details:
+                #
+                #     logger.info(item['_id'])
+
+                # with open(filename, 'a+', newline='', encoding='utf-8') as f:
+                #     for tweet in tweets['statuses']:
+                #         #logger.info("current_max_id: %s; tweets: %s"%(current_max_id, tweets))
+                #         logger.info("current_max_id: %s"%(current_max_id))
+                #         f.write('%s\n'%json.dumps(tweet))
+                #         if current_max_id == 0 or current_max_id > int(tweet['id']):
+                #             current_max_id = int(tweet['id'])
+                #         if current_since_id == 0 or current_since_id < int(tweet['id']):
+                #             current_since_id = int(tweet['id'])
+
 
                 #no new tweets found
+
                 if (prev_max_id == current_max_id):
+                    no_new_tweets = True
                     break
 
                 #result_tweets.extend(tweets['statuses'])
@@ -426,7 +469,8 @@ class TwitterCrawler(twython.Twython):
                     #raise MaxRetryReached("max retry reached due to %s"%(exc))
 
         logger.info("[%s]; since_id: [%d]; total tweets: %d "%(query, since_id, cnt))
-        return current_since_id
+
+        return current_since_id, no_new_tweets
 
     def lookup_tweets_by_ids(self, tweet_ids=[]):
 

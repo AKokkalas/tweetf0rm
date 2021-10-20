@@ -21,7 +21,6 @@ WAIT_TIME = 30
 CLIENT_ARGS = {"timeout": 30}
 
 def flash_cmd_config(cmd_config, cmd_config_filepath, output_folder):
-
     with open(os.path.abspath(cmd_config_filepath), 'w') as cmd_config_wf:
         json.dump(cmd_config, cmd_config_wf)
 
@@ -37,7 +36,8 @@ def collect_tweets_by_search_terms(search_configs_filepath, output_folder, confi
         search_configs = json.load(search_configs_rf)
 
     for search_config_id in itertools.cycle(search_configs):
-       
+        # ALEX break iter when last updated tweet
+        # print("search_config_id" + search_config_id)
         search_config = search_configs[search_config_id]
 
         search_terms = [term.lower() for term in search_config['terms']]
@@ -47,10 +47,13 @@ def collect_tweets_by_search_terms(search_configs_filepath, output_folder, confi
 
         logger.info('REQUEST -> (md5(querystring): [%s]; since_id: [%d]; geocode: [%s])'%(util.md5(querystring.encode('utf-8')), since_id, geocode))
 
-
+        # ALEX here it calls tweeter crawler
         try:
+            no_new_tweets = False
             twitterCralwer = TwitterCrawler(apikeys=apikeys, client_args=CLIENT_ARGS, output_folder = output_folder)
-            since_id = twitterCralwer.search_by_query(querystring, geocode = geocode, since_id = since_id)
+            since_id, no_new_tweets = twitterCralwer.search_by_query(querystring, geocode = geocode, since_id = since_id, search_name=output_folder.rsplit('\\', 1)[-1]) #added search_name to find it in mongo db
+            logger.info('since id [%d]', since_id)
+
         except Exception as exc:
             logger.error(exc)
             logger.error(util.full_stack())
@@ -61,10 +64,24 @@ def collect_tweets_by_search_terms(search_configs_filepath, output_folder, confi
         search_config['geocode'] = geocode
 
         search_configs[search_config_id] = search_config
-
+        # logger.info('ALEX search_configs_filepath: ' + search_configs_filepath)
+        # logger.info('ALEX search_configs: ' + json.dumps(search_configs))
         flash_cmd_config(search_configs, search_configs_filepath, output_folder)
 
         logger.info('COMPLETED -> (md5(querystring): [%s]; since_id: [%d]; geocode: [%s])'%(util.md5(querystring.encode('utf-8')), since_id, geocode))
+
+        #Exit program if no new tweets
+        if no_new_tweets:
+            if os.path.exists(output_folder):
+                logger.info('Delete temp dir: ' + output_folder)
+                import shutil
+                shutil.rmtree(output_folder)
+
+            logger.info('Twitter tracker stop : no more new tweets')
+
+            import sys
+            sys.exit()
+
         logger.info('PAUSE %ds to CONTINUE...'%WAIT_TIME)
         time.sleep(WAIT_TIME)
 

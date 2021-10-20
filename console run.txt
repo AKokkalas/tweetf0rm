@@ -1,0 +1,3 @@
+C:\venv\so-close\Scripts\activate.bat
+cd C:\Users\Alex\Documents\Projects\EKETA\SOClose\tweetf0rm
+twitter_tracker.py -c C:/Users/Alex/Documents/Projects/EKETA/SOClose/tweetf0rm/config.json -cmd search -o C:/Users/Alex/Documents/Projects/EKETA/SOClose/tweetf0rm_output -cc search.json -wait 100
