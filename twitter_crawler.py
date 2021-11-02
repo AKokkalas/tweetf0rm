@@ -401,11 +401,12 @@ class TwitterCrawler(twython.Twython):
                 # Create a new collection
                 collection_name = dbname["tweeter"]
                 item_details = collection_name.find()
-
+                count = 0
                 for tweet in tweets['statuses']:
+                    count += 1
                     # INSERT in mongodb
                     # logger.info("tweet id: %s"%(tweet))
-                    logger.info("tweet id: %s" % (tweet["id"]))
+                    #logger.info("tweet id: %s" % (tweet["id"]))
                     tweet["search_name"] = search_name  # "custom_search_name"
                     collection_name.insert_one(tweet)
                     if current_max_id == 0 or current_max_id > int(tweet['id']):
@@ -414,7 +415,7 @@ class TwitterCrawler(twython.Twython):
                         current_since_id = int(tweet['id'])
                     #break
 
-
+                logger.info ("tweets added: %d" %(count) )
 
                 from pandas import DataFrame
                 # convert the dictionary objects to dataframe

@@ -51,7 +51,9 @@ def collect_tweets_by_search_terms(search_configs_filepath, output_folder, confi
         try:
             no_new_tweets = False
             twitterCralwer = TwitterCrawler(apikeys=apikeys, client_args=CLIENT_ARGS, output_folder = output_folder)
-            since_id, no_new_tweets = twitterCralwer.search_by_query(querystring, geocode = geocode, since_id = since_id, search_name=output_folder.rsplit('\\', 1)[-1]) #added search_name to find it in mongo db
+            # For windows
+            #since_id, no_new_tweets = twitterCralwer.search_by_query(querystring, geocode = geocode, since_id = since_id, search_name=output_folder.rsplit('\\', 1)[-1]) #added search_name to find it in mongo db
+            since_id, no_new_tweets = twitterCralwer.search_by_query(querystring, geocode = geocode, since_id = since_id, search_name=output_folder.rsplit('/', 1)[-1]) #added search_name to find it in mongo db
             logger.info('since id [%d]', since_id)
 
         except Exception as exc:
