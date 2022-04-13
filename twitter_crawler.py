@@ -400,7 +400,7 @@ class TwitterCrawler(twython.Twython):
                 #Change file with connection to mongoDB
                 # Create a new collection
                 collection_name = dbname["tweeter"]
-                item_details = collection_name.find()
+                # item_details = collection_name.find()
                 count = 0
                 for tweet in tweets['statuses']:
                     count += 1
@@ -408,7 +408,10 @@ class TwitterCrawler(twython.Twython):
                     # logger.info("tweet id: %s"%(tweet))
                     #logger.info("tweet id: %s" % (tweet["id"]))
                     tweet["search_name"] = search_name  # "custom_search_name"
-                    collection_name.insert_one(tweet)
+                    # collection_name.insert_one(tweet)
+                    # collection_name.replace_one({"full_text": tweet["full_text"], "search_name" : search_name}, tweet, upsert=True )
+                    collection_name.replace_one({"full_text": tweet["full_text"]}, tweet, upsert=True)
+                    
                     if current_max_id == 0 or current_max_id > int(tweet['id']):
                         current_max_id = int(tweet['id'])
                     if current_since_id == 0 or current_since_id < int(tweet['id']):
@@ -417,9 +420,9 @@ class TwitterCrawler(twython.Twython):
 
                 logger.info ("tweets added: %d" %(count) )
 
-                from pandas import DataFrame
+                # from pandas import DataFrame
                 # convert the dictionary objects to dataframe
-                items_df = DataFrame(item_details)
+                # items_df = DataFrame(item_details)
 
                 # see the magic
                 # print(items_df)
@@ -443,6 +446,15 @@ class TwitterCrawler(twython.Twython):
 
                 if (prev_max_id == current_max_id):
                     no_new_tweets = True
+                    #If last record insert dummy last record
+                    collection_name = dbname["tweeter"]
+                    insert_dummy_json = {}
+                    insert_dummy_json['last_record'] = True
+                    insert_dummy_json['search_name'] = search_name
+                    
+                    collection_name.insert_one(insert_dummy_json)
+                    
+                    
                     break
 
                 #result_tweets.extend(tweets['statuses'])

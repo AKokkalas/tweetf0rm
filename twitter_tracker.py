@@ -27,8 +27,9 @@ def flash_cmd_config(cmd_config, cmd_config_filepath, output_folder):
     with open(os.path.abspath('%s/%s'%(output_folder, os.path.basename(cmd_config_filepath))), 'w') as cmd_config_wf:
         json.dump(cmd_config, cmd_config_wf)
 
+
 def collect_tweets_by_search_terms(search_configs_filepath, output_folder, config):
-    
+
     apikeys = list(config['apikeys'].values()).pop()
 
     search_configs = {}
@@ -73,11 +74,12 @@ def collect_tweets_by_search_terms(search_configs_filepath, output_folder, confi
         logger.info('COMPLETED -> (md5(querystring): [%s]; since_id: [%d]; geocode: [%s])'%(util.md5(querystring.encode('utf-8')), since_id, geocode))
 
         #Exit program if no new tweets
+        tempt_folder_path = os.path.dirname(output_folder)
         if no_new_tweets:
-            if os.path.exists(output_folder):
-                logger.info('Delete temp dir: ' + output_folder)
+            if os.path.exists(tempt_folder_path):
+                logger.info('Delete temp dir: ' + tempt_folder_path)
                 import shutil
-                shutil.rmtree(output_folder)
+                shutil.rmtree(tempt_folder_path)
 
             logger.info('Twitter tracker stop : no more new tweets')
 
