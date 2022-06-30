@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-{"keyword_list_0": {"geocode": null, "terms": ["test1"], "since_id": 1499761831010656259, "querystring": "(test1)"}}
-=======
 {"keyword_list_0": {"geocode": null, "terms": [], "since_id": 1, "querystring": ""}}
->>>>>>> 2e94153884a5f44f98b7c6d5340e4417d8e0fb97
