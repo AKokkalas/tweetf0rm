@@ -415,6 +415,11 @@ class TwitterCrawler(twython.Twython):
         from mongo_connector import get_database
         dbname = get_database()
 
+        import calendar
+        import time
+
+        current_GMT = time.gmtime()
+
         while current_max_id != prev_max_id and retry_cnt > 0:
             try:
                 if current_max_id > 0:
@@ -427,19 +432,31 @@ class TwitterCrawler(twython.Twython):
                 # if no new tweets are found, the prev_max_id will be the same as current_max_id
                 prev_max_id = current_max_id
 
+                # Save timestamp in article
+
+                timestamp = calendar.timegm(current_GMT)
+
                 # Change file with connection to mongoDB
                 # Create a new collection
                 collection_name = dbname["tweeter"]
                 # item_details = collection_name.find()
                 count = 0
                 for tweet in tweets['statuses']:
+
+                    if "retweeted_status" in tweet.keys():
+                        continue
+
                     count += 1
                     # INSERT in mongodb
-                    # logger.info("tweet id: %s"%(tweet))
+                    # logger.info("tweet id: %s" % (tweet))
                     #logger.info("tweet id: %s" % (tweet["id"]))
+                    # tweet = tweet["retweeted_status"]
                     tweet["search_name"] = search_name  # "custom_search_name"
+                    tweet["query"] = query
+                    tweet["date_time"] = now
+                    tweet["timestamp"] = timestamp
                     # collection_name.insert_one(tweet)
-                    # collection_name.replace_one({"full_text": tweet["full_text"], "search_name" : search_name}, tweet, upsert=True )
+                    #collection_name.replace_one({"full_text": tweet["full_text"], "search_name" : search_name}, tweet, upsert=True )
                     collection_name.replace_one(
                         {"full_text": tweet["full_text"]}, tweet, upsert=True)
 
@@ -482,6 +499,8 @@ class TwitterCrawler(twython.Twython):
                     insert_dummy_json['last_record'] = True
                     insert_dummy_json['search_name'] = search_name
                     insert_dummy_json['total_tweets_found'] = cnt
+                    insert_dummy_json['date_time'] = now
+                    insert_dummy_json['timestamp'] = timestamp
 
                     collection_name.insert_one(insert_dummy_json)
 
