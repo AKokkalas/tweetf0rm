@@ -414,7 +414,8 @@ class TwitterCrawler(twython.Twython):
         # Get the database ALEX
         from mongo_connector import get_database
         dbname = get_database()
-
+        from pymongo import ASCENDING, errors
+        from pymongo.write_concern import WriteConcern
         import calendar
         import time
 
@@ -440,6 +441,11 @@ class TwitterCrawler(twython.Twython):
                 # Create a new collection
                 collection_name = dbname["tweeter"]
                 # item_details = collection_name.find()
+                # create index
+                index_name = 'tweetId_search_name_indx'
+                if index_name not in collection_name.index_information():
+                    collection_name.create_index([("id_str", ASCENDING), ("search_name", ASCENDING)], name=index_name,
+                                                 unique=True)
                 count = 0
                 for tweet in tweets['statuses']:
 
@@ -457,9 +463,13 @@ class TwitterCrawler(twython.Twython):
                     tweet["timestamp"] = timestamp
                     # collection_name.insert_one(tweet)
                     #collection_name.replace_one({"full_text": tweet["full_text"], "search_name" : search_name}, tweet, upsert=True )
-                    collection_name.replace_one(
-                        {"full_text": tweet["full_text"]}, tweet, upsert=True)
-
+                    # collection_name.replace_one(
+                    #     {"full_text": tweet["full_text"]}, tweet, upsert=True)
+                    try:
+                        collection_name.insert_one(tweet)
+                    except errors.DuplicateKeyError:
+                        print(
+                            'dublicate key (twitter-collection), doc already exists..skip..')
                     if current_max_id == 0 or current_max_id > int(tweet['id']):
                         current_max_id = int(tweet['id'])
                     if current_since_id == 0 or current_since_id < int(tweet['id']):
