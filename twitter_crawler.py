@@ -446,7 +446,7 @@ class TwitterCrawler(twython.Twython):
                 if index_name not in collection_name.index_information():
                     collection_name.create_index([("id_str", ASCENDING), ("search_name", ASCENDING)], name=index_name,
                                                  unique=True)
-                count = 0
+                count, count_double = 0, 0
                 for tweet in tweets['statuses']:
 
                     if "retweeted_status" in tweet.keys():
@@ -469,7 +469,8 @@ class TwitterCrawler(twython.Twython):
                         collection_name.insert_one(tweet)
                     except errors.DuplicateKeyError:
                         print(
-                            'dublicate key (twitter-collection), doc already exists..skip..')
+                            'Dublicate key (twitter-collection), doc already exists in DB..skip..')
+                        count_double += 1
                     if current_max_id == 0 or current_max_id > int(tweet['id']):
                         current_max_id = int(tweet['id'])
                     if current_since_id == 0 or current_since_id < int(tweet['id']):
@@ -508,7 +509,8 @@ class TwitterCrawler(twython.Twython):
                     insert_dummy_json = {}
                     insert_dummy_json['last_record'] = True
                     insert_dummy_json['search_name'] = search_name
-                    insert_dummy_json['total_tweets_found'] = cnt
+                    insert_dummy_json['total_tweets_fetched'] = cnt
+                    insert_dummy_json['prexisted_tweets'] = count_double
                     insert_dummy_json['date_time'] = now
                     insert_dummy_json['timestamp'] = timestamp
 
