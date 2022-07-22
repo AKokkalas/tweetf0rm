@@ -374,6 +374,10 @@ class TwitterCrawler(twython.Twython):
 
     # ADDED search_name for finding it in mongoDB
     def search_by_query(self, query, since_id=0, geocode=None, search_name="no_search_name", lang=None, output_filename=None):
+        start_time = time.time()
+
+        # filter out retweets and replies
+        query = "(" + query + ") " + "-filter:retweets"
 
         if not query:
             raise Exception("search: query cannot be None")
@@ -417,7 +421,6 @@ class TwitterCrawler(twython.Twython):
         from pymongo import ASCENDING, errors
         from pymongo.write_concern import WriteConcern
         import calendar
-        import time
 
         current_GMT = time.gmtime()
 
@@ -446,11 +449,12 @@ class TwitterCrawler(twython.Twython):
                 if index_name not in collection_name.index_information():
                     collection_name.create_index([("id_str", ASCENDING), ("search_name", ASCENDING)], name=index_name,
                                                  unique=True)
+                logger.info("time to crawl: %.3f seconds" % (time.time() -
+                            start_time))
+
+                insert_time = time.time()
                 count, count_double = 0, 0
                 for tweet in tweets['statuses']:
-
-                    if "retweeted_status" in tweet.keys():
-                        continue
 
                     count += 1
                     # INSERT in mongodb
@@ -477,7 +481,8 @@ class TwitterCrawler(twython.Twython):
                         current_since_id = int(tweet['id'])
                     # break
 
-                logger.info("tweets added: %d" % (count))
+                logger.info("tweets added: %d / time2insert in DB: %.3f seconds" % (
+                    count, (time.time() - insert_time)))
 
                 # from pandas import DataFrame
                 # convert the dictionary objects to dataframe
