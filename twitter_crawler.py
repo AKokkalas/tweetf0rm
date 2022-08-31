@@ -406,7 +406,7 @@ class TwitterCrawler(twython.Twython):
 
         # logger.info("filename: %s; since_id: %d" % (filename, since_id))
         prev_max_id = -1
-
+        MAX_NUM_OF_TWEETS = 100000
         current_max_id = 0
         cnt = 0
         current_since_id = since_id
@@ -424,7 +424,7 @@ class TwitterCrawler(twython.Twython):
 
         current_GMT = time.gmtime()
 
-        while current_max_id != prev_max_id and retry_cnt > 0:
+        while current_max_id != prev_max_id and retry_cnt > 0 and cnt <= MAX_NUM_OF_TWEETS:
             try:
                 if current_max_id > 0:
                     tweets = self.search(q=query, geocode=geo, since_id=since_id, lang=lang,
