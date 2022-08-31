@@ -514,6 +514,7 @@ class TwitterCrawler(twython.Twython):
                     insert_dummy_json = {}
                     insert_dummy_json['last_record'] = True
                     insert_dummy_json['search_name'] = search_name
+                    insert_dummy_json['query'] = query  # add query search
                     insert_dummy_json['total_tweets_fetched'] = cnt
                     insert_dummy_json['prexisted_tweets'] = count_double
                     insert_dummy_json['date_time'] = now
