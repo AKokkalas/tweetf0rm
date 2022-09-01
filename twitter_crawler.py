@@ -406,7 +406,7 @@ class TwitterCrawler(twython.Twython):
 
         # logger.info("filename: %s; since_id: %d" % (filename, since_id))
         prev_max_id = -1
-        MAX_NUM_OF_TWEETS = 100000
+        MAX_NUM_OF_TWEETS = 10000
         current_max_id = 0
         cnt = 0
         current_since_id = since_id
