@@ -424,7 +424,7 @@ class TwitterCrawler(twython.Twython):
 
         current_GMT = time.gmtime()
 
-        while current_max_id != prev_max_id and retry_cnt > 0 and cnt <= MAX_NUM_OF_TWEETS:
+        while current_max_id != prev_max_id and retry_cnt > 0:
             try:
                 if current_max_id > 0:
                     tweets = self.search(q=query, geocode=geo, since_id=since_id, lang=lang,
@@ -507,7 +507,7 @@ class TwitterCrawler(twython.Twython):
 
                 # no new tweets found
 
-                if (prev_max_id == current_max_id):
+                if (prev_max_id == current_max_id or cnt >= MAX_NUM_OF_TWEETS):
                     no_new_tweets = True
                     # If last record insert dummy last record
                     collection_name = dbname["tweeter"]
